@@ -44,23 +44,25 @@ toggled = False
 
 targeting = TargetingConfig()
 
-#Used to branch orbwalking logic if Player is using one of these champs
+# Used to branch orbwalking logic if Player is using one of these champs
 special_orbwalk_champs = {
     "azir": 0.0,
     "cassiopeia": 0.0
 }
+
 
 def lview_load_cfg(cfg):
     global key_attack_move, key_orbwalk, key_lasthit, max_atk_speed, auto_last_hit, toggle_mode
     global targeting
 
     key_attack_move = cfg.get_int("key_attack_move", 0)
-    key_orbwalk     = cfg.get_int("key_orbwalk", 0)
-    key_lasthit     = cfg.get_int("key_lasthit", 0)
-    max_atk_speed   = cfg.get_float("max_atk_speed", 2.0)
-    auto_last_hit   = cfg.get_bool("auto_last_hit", True)
-    toggle_mode     = cfg.get_bool("toggle_mode", False)
+    key_orbwalk = cfg.get_int("key_orbwalk", 0)
+    key_lasthit = cfg.get_int("key_lasthit", 0)
+    max_atk_speed = cfg.get_float("max_atk_speed", 2.0)
+    auto_last_hit = cfg.get_bool("auto_last_hit", True)
+    toggle_mode = cfg.get_bool("toggle_mode", False)
     targeting.load_from_cfg(cfg)
+
 
 def lview_save_cfg(cfg):
     global key_attack_move, key_orbwalk, key_lasthit, max_atk_speed, auto_last_hit, toggle_mode
@@ -74,31 +76,34 @@ def lview_save_cfg(cfg):
     cfg.set_bool("toggle_mode", toggle_mode)
     targeting.save_to_cfg(cfg)
 
+
 def lview_draw_settings(game, ui):
     global key_attack_move, key_orbwalk, key_lasthit, max_atk_speed, auto_last_hit, toggle_mode
     global targeting
-    max_atk_speed   = ui.sliderfloat("Max attack speed", max_atk_speed, 1.5, 3.0)
+    max_atk_speed = ui.sliderfloat("Max attack speed", max_atk_speed, 1.5, 3.0)
     key_attack_move = ui.keyselect("Attack move key", key_attack_move)
-    key_orbwalk     = ui.keyselect("Orbwalk and focus harass key", key_orbwalk)
-    key_lasthit     = ui.keyselect("Orbwalk and focus lasthit key", key_lasthit)
-    auto_last_hit   = ui.checkbox("Last hit minions when no targets", auto_last_hit)
-    toggle_mode     = ui.checkbox("Toggle mode", toggle_mode)
+    key_orbwalk = ui.keyselect("Orbwalk and focus harass key", key_orbwalk)
+    key_lasthit = ui.keyselect("Orbwalk and focus lasthit key", key_lasthit)
+    auto_last_hit = ui.checkbox("Last hit minions when no targets", auto_last_hit)
+    toggle_mode = ui.checkbox("Toggle mode", toggle_mode)
     targeting.draw(ui)
 
-#Added range parameter so we can specify custom minion targeting range based on champ ability range (like cass E for example)
+
+# Added range parameter so we can specify custom minion targeting range based on champ ability range (like cass E for example)
 def find_minion_target(game, range=None):
-	atk_range = range or game.player.attack_Range + game.player.gameplay_radius
-	min_health = 9999999999
-	player_target = None
-	for minion in game.minions:
-		if minion.is_visible and minion.is_enemy_to(game.player) and minion.is_alive and minion.health < min_health and game.distance(game.player, minion) < atk_range:
-			if skills.is_last_hitable(game, game.player, minion):
-				player_target = minion
-				min_health = minion.health
-		
-	return player_target
-	
-#We rely on skills.soldier_near_obj to calculate the range and retrieve the soldier data for soldier's minion target
+    atk_range = range or game.player.attack_Range + game.player.gameplay_radius
+    min_health = 9999999999
+    player_target = None
+    for minion in game.minions:
+        if minion.is_visible and minion.is_enemy_to(game.player) and minion.is_alive and minion.health < min_health and game.distance(game.player, minion) < atk_range:
+            if skills.is_last_hitable(game, game.player, minion):
+                player_target = minion
+                min_health = minion.health
+
+    return player_target
+
+
+# We rely on skills.soldier_near_obj to calculate the range and retrieve the soldier data for soldier's minion target
 def find_soldier_minion_target(game):
     min_health = 9999999999
     soldier_target = None
@@ -110,6 +115,7 @@ def find_soldier_minion_target(game):
                 min_health = minion.health
 
     return soldier_target
+
 
 def champ_near_obj(game, champ):
     soldier_target = skills.soldier_near_obj(game, champ)
@@ -126,13 +132,14 @@ def get_target(game, last_hit_prio):
     global special_orbwalk_champs
     atk_range = game.player.attack_Range + game.player.gameplay_radius
 
-    if target is not None and (not target.is_visible or not target.is_alive or (skills.soldier_near_obj(game, target) is None and game.distance(game.player, target) > atk_range)):
+    if target is not None and (
+            not target.is_visible or not target.is_alive or (skills.soldier_near_obj(game, target) is None and game.distance(game.player, target) > atk_range)):
         target = None
 
     if target is not None:
         if not last_hit_prio:
             if not target.has_tags(UnitTag.Unit_Champion):
-                #since last target is valid but it isn't a champion and we're focusing on harass then we're allowed to overwrite target only if we can find a champion in range
+                # since last target is valid but it isn't a champion and we're focusing on harass then we're allowed to overwrite target only if we can find a champion in range
                 for champ in game.champs:
                     if champ_near_obj(game, champ):
                         target = targeting.get_target(game, atk_range)
@@ -146,7 +153,7 @@ def get_target(game, last_hit_prio):
             if game.player.name == "azir":
                 soldier = skills.is_soldier_alive(game)
 
-                #only need to know if > 0 soldiers are up
+                # only need to know if > 0 soldiers are up
                 if soldier is not None:
                     target = find_soldier_minion_target(game)
             elif game.player.name == "cassiopeia":
@@ -155,7 +162,7 @@ def get_target(game, last_hit_prio):
         if not target:
             target = find_minion_target(game)
 
-    #Unused for now, only use V for last hitting, don't expect V to harass champs
+    # Unused for now, only use V for last hitting, don't expect V to harass champs
     # if not target and last_hit_prio:
     # 	target = targeting.get_target(game, atk_range)
     return target
@@ -167,28 +174,26 @@ def draw_rect(game, start_pos, end_pos, radius, color):
     left_dir = Vec3(dir.x, dir.y, dir.z).rotate_y(90).scale(radius)
     right_dir = Vec3(dir.x, dir.y, dir.z).rotate_y(-90).scale(radius)
 
-    p1 = Vec3(start_pos.x + left_dir.x,  start_pos.y + left_dir.y,  start_pos.z + left_dir.z)
-    p2 = Vec3(end_pos.x + left_dir.x,    end_pos.y + left_dir.y,    end_pos.z + left_dir.z)
-    p3 = Vec3(end_pos.x + right_dir.x,   end_pos.y + right_dir.y,   end_pos.z + right_dir.z)
+    p1 = Vec3(start_pos.x + left_dir.x, start_pos.y + left_dir.y, start_pos.z + left_dir.z)
+    p2 = Vec3(end_pos.x + left_dir.x, end_pos.y + left_dir.y, end_pos.z + left_dir.z)
+    p3 = Vec3(end_pos.x + right_dir.x, end_pos.y + right_dir.y, end_pos.z + right_dir.z)
     p4 = Vec3(start_pos.x + right_dir.x, start_pos.y + right_dir.y, start_pos.z + right_dir.z)
 
     game.draw_rect_world(p1, p2, p3, p4, 3, color)
 
+
 def draw(game, obj, radius, show_circle_world, show_circle_map, icon):
-			
-	sp = game.world_to_screen(obj.pos)
-	
-	if game.is_point_on_screen(sp):
-		duration = obj.duration + obj.last_visible_at - game.time
-		if duration > 0:
-			game.draw_text(sp.add(Vec2(5, 30)), f'{duration:.0f}', Color.WHITE)	
-		game.draw_image(icon, sp, sp.add(Vec2(30, 30)), Color.WHITE, 10)
-		
-		if show_circle_world:
-			game.draw_circle_world(obj.pos, radius, 30, 3, Color.RED)
-	
-	if show_circle_map:
-		game.draw_circle(game.world_to_minimap(obj.pos), game.distance_to_minimap(radius), 15, 2, Color.RED)
+    sp = game.world_to_screen(obj.pos)
+    if game.is_point_on_screen(sp):
+        duration = obj.duration + obj.last_visible_at - game.time
+        if duration > 0:
+            game.draw_text(sp.add(Vec2(5, 30)), f'{duration:.0f}', Color.WHITE)
+        game.draw_image(icon, sp, sp.add(Vec2(30, 30)), Color.WHITE, 10)
+    if show_circle_world:
+        game.draw_circle_world(obj.pos, radius, 30, 3, Color.RED)
+    if show_circle_map:
+        game.draw_circle(game.world_to_minimap(obj.pos), game.distance_to_minimap(radius), 15, 2, Color.RED)
+
 
 def cassQ(game, target):
     global last_attacked
@@ -203,6 +208,7 @@ def cassQ(game, target):
         skill.trigger()
         time.sleep(0.01)
         game.move_cursor(cursor_pos)
+
 
 def cassE(game, target):
     global last_attacked
@@ -238,17 +244,17 @@ def lview_update(game, ui):
     if game.is_key_down(key_lasthit):
         last_hit_priority = True
 
-    #Show orbwalk target
+    # Show orbwalk target
     if target is not None:
         game.draw_circle_world(target.pos, 24.0, 16, 3, Color.WHITE)
 
-    #Use if you need to prevent orbwalker from interrupting your key presses:
+    # Use if you need to prevent orbwalker from interrupting your key presses:
     # for key in key_whitelist.items():
     # 	if game.was_key_pressed(key):
     #		last_attacked = time.time()
 
     self = game.player
-    #Handle basic attacks
+    # Handle basic attacks
     atk_speed = self.base_atk_speed * self.atk_speed_multi
     b_windup_time = ((1.0 / self.base_atk_speed) * game.player.basic_atk_windup)
     c_atk_time = (1.0 / atk_speed)
@@ -256,7 +262,7 @@ def lview_update(game, ui):
     t = time.time()
     soldier_hitting = False
 
-    #NEWWY DEWWY
+    # NEWWY DEWWY
     target = get_target(game, last_hit_priority)
 
     if game.player.name in special_orbwalk_champs:
@@ -280,7 +286,8 @@ def lview_update(game, ui):
                     last_attacked = t
                     cassE(game, target)
 
-    if t - last_attacked >= max(c_atk_time, max_atk_time) and target and ((game.distance(game.player, target) < self.attack_Range + self.gameplay_radius) or soldier_hitting):
+    if t - last_attacked >= max(c_atk_time, max_atk_time) and target and (
+            (game.distance(game.player, target) < self.attack_Range + self.gameplay_radius) or soldier_hitting):
         last_attacked = t
         cast_point = game.world_to_screen(target.pos)
         cursor_pos = game.get_cursor()
