@@ -4,7 +4,7 @@
 #include "Spell.h"
 #include "GameData.h"
 
-BYTE  GameObject::buff[GameObject::sizeBuff]         = {};
+BYTE  GameObject::buff[GameObject::sizeBuff] = {};
 BYTE  GameObject::buffDeep[GameObject::sizeBuffDeep] = {};
 
 bool GameObject::HasUnitTags(const UnitTag& type1) const {
@@ -105,6 +105,7 @@ void GameObject::LoadFromMem(DWORD base, HANDLE hProcess, bool deepLoad) {
 	memcpy(&maxHealth,     &buff[Offsets::ObjMaxHealth],     sizeof(float));
 	memcpy(&baseAttack,    &buff[Offsets::ObjBaseAtk],       sizeof(float));
 	memcpy(&bonusAttack,   &buff[Offsets::ObjBonusAtk],      sizeof(float));
+	memcpy(&attackRange,   &buff[Offsets::ObjAtkRange],      sizeof(float));
 	memcpy(&armour,        &buff[Offsets::ObjArmor],         sizeof(float));
 	memcpy(&magicResist,   &buff[Offsets::ObjMagicRes],      sizeof(float));
 	memcpy(&duration,      &buff[Offsets::ObjExpiry],        sizeof(float));
@@ -115,8 +116,8 @@ void GameObject::LoadFromMem(DWORD base, HANDLE hProcess, bool deepLoad) {
 	memcpy(&abilityPower,  &buff[Offsets::ObjAbilityPower],  sizeof(float));
 	memcpy(&abilityHaste,  &buff[Offsets::ObjAbilityHaste],  sizeof(float));
 	memcpy(&atkSpeedMulti, &buff[Offsets::ObjAtkSpeedMulti], sizeof(float));
-	memcpy(&movementSpeed, &buff[Offsets::ObjMoveSpeed],     sizeof(float));
-	memcpy(&networkId,     &buff[Offsets::ObjNetworkID],     sizeof(DWORD));
+	memcpy(&movementSpeed, &buff[Offsets::ObjMoveSpeed], sizeof(float));
+	memcpy(&networkId, &buff[Offsets::ObjNetworkID], sizeof(DWORD));
 
 	// Check if alive
 	DWORD spawnCount;
@@ -139,7 +140,7 @@ void GameObject::LoadFromMem(DWORD base, HANDLE hProcess, bool deepLoad) {
 	if (HasUnitTags(Unit_Champion)) {
 		LoadChampionFromMem(base, hProcess, deepLoad);
 	}
-	else if(unitInfo == GameData::UnknownUnit) {
+	else if (unitInfo == GameData::UnknownUnit) {
 		// Try reading missile extension
 		LoadMissileFromMem(base, hProcess, deepLoad);
 	}
@@ -179,7 +180,7 @@ void GameObject::LoadChampionFromMem(DWORD base, HANDLE hProcess, bool deepLoad)
 		itemInfoPtr = Mem::ReadDWORD(hProcess, itemPtr + Offsets::ItemInfo);
 		if (itemInfoPtr == 0)
 			continue;
-		
+
 		int id = Mem::ReadDWORD(hProcess, itemInfoPtr + Offsets::ItemInfoId);
 		itemSlots[i].isEmpty = false;
 		itemSlots[i].stats = GameData::GetItemInfoById(id);
@@ -194,31 +195,31 @@ void GameObject::LoadChampionFromMem(DWORD base, HANDLE hProcess, bool deepLoad)
 		for (int i = 0; i < 50; i++) //idk what size is good
 		{
 			DWORD buffInstancePtr = buffArrayBgn + i * 4;
-			DWORD buffInstance    = Mem::ReadDWORD(hProcess, buffInstancePtr);
+			DWORD buffInstance = Mem::ReadDWORD(hProcess, buffInstancePtr);
 
 			Mem::Read(hProcess, buffInstance, buff, sizeBuff);
 
 			if (buffInstance == 0)
 				continue;
-		
+
 			DWORD buffInfo = Mem::ReadDWORDFromBuffer(buff, 0x8);
-			
+
 			if (buffInfo < 10)
 				continue;
 
 			char buffnamebuffer[240];
 			Mem::Read(hProcess, buffInfo + Offsets::BuffName, buffnamebuffer, 240);
-			
+
 			float buffStartTime;
 			float buffEndTime;
 
 			memcpy(&buffStartTime, &buff[Offsets::BuffEntryBuffStartTime], sizeof(float));
-			memcpy(&buffEndTime,   &buff[Offsets::BuffEntryBuffEndTime],   sizeof(float));
+			memcpy(&buffEndTime, &buff[Offsets::BuffEntryBuffEndTime], sizeof(float));
 
 			buffVector.push_back(BuffInstance(buffnamebuffer, buffStartTime, buffEndTime));
 		}
 	}
-	
+
 	// Read level
 	level = Mem::ReadDWORD(hProcess, base + Offsets::ObjLvl);
 }
@@ -241,7 +242,7 @@ bool GameObject::IsRanged() {
 
 list GameObject::ItemsToPyList() {
 	list l;
-	for (int i = 0; i < 6; ++i){
+	for (int i = 0; i < 6; ++i) {
 		if (!itemSlots[i].isEmpty)
 			l.append(boost::ref(itemSlots[i]));
 	}
@@ -250,7 +251,7 @@ list GameObject::ItemsToPyList() {
 
 list GameObject::BuffsToPyList() {
 	list buffList;
-	for (auto &buffs : buffVector)
+	for (auto& buffs : buffVector)
 	{
 		buffList.append(boost::ref(buffs));
 	}
@@ -271,10 +272,10 @@ void GameObject::LoadMissileFromMem(DWORD base, HANDLE hProcess, bool deepLoad) 
 	if (spellDataPtr == 0)
 		return;
 
-	memcpy(&srcIndex,  buff + Offsets::MissileSrcIdx,   sizeof(short));
-	memcpy(&destIndex, buff + Offsets::MissileDestIdx,  sizeof(short));
-	memcpy(&startPos,  buff + Offsets::MissileStartPos, sizeof(Vector3));
-	memcpy(&endPos,    buff + Offsets::MissileEndPos,   sizeof(Vector3));
+	memcpy(&srcIndex, buff + Offsets::MissileSrcIdx, sizeof(short));
+	memcpy(&destIndex, buff + Offsets::MissileDestIdx, sizeof(short));
+	memcpy(&startPos, buff + Offsets::MissileStartPos, sizeof(Vector3));
+	memcpy(&endPos, buff + Offsets::MissileEndPos, sizeof(Vector3));
 
 	Mem::Read(hProcess, spellDataPtr, buff, 0x500);
 
@@ -299,9 +300,9 @@ void GameObject::LoadMissileFromMem(DWORD base, HANDLE hProcess, bool deepLoad) 
 		endPos = endPos.normalize();
 
 		// Update endposition using the height of the current position
-		endPos.x = endPos.x*spellInfo->castRange + startPos.x;
+		endPos.x = endPos.x * spellInfo->castRange + startPos.x;
 		endPos.y = startPos.y;
-		endPos.z = endPos.z*spellInfo->castRange + startPos.z;
+		endPos.z = endPos.z * spellInfo->castRange + startPos.z;
 	}
 }
 

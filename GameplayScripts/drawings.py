@@ -88,7 +88,7 @@ def draw_rect(game, start_pos, end_pos, radius, color):
 def draw_atk_range(game, player):
 	color = Color.GREEN
 	color.a = 0.5
-	game.draw_circle_world(player.pos, player.base_atk_range + player.gameplay_radius, 100, 2, color)
+	game.draw_circle_world(player.pos, player.attack_Range + player.gameplay_radius, 100, 2, color)
 
 def draw_turret_ranges(game, player):
 	color = Color.RED
