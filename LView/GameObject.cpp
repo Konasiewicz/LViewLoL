@@ -116,8 +116,8 @@ void GameObject::LoadFromMem(DWORD base, HANDLE hProcess, bool deepLoad) {
 	memcpy(&abilityPower,  &buff[Offsets::ObjAbilityPower],  sizeof(float));
 	memcpy(&abilityHaste,  &buff[Offsets::ObjAbilityHaste],  sizeof(float));
 	memcpy(&atkSpeedMulti, &buff[Offsets::ObjAtkSpeedMulti], sizeof(float));
-	memcpy(&movementSpeed, &buff[Offsets::ObjMoveSpeed], sizeof(float));
-	memcpy(&networkId, &buff[Offsets::ObjNetworkID], sizeof(DWORD));
+	memcpy(&movementSpeed, &buff[Offsets::ObjMoveSpeed],     sizeof(float));
+	memcpy(&networkId,     &buff[Offsets::ObjNetworkID],     sizeof(DWORD));
 
 	// Check if alive
 	DWORD spawnCount;
@@ -195,7 +195,7 @@ void GameObject::LoadChampionFromMem(DWORD base, HANDLE hProcess, bool deepLoad)
 		for (int i = 0; i < 50; i++) //idk what size is good
 		{
 			DWORD buffInstancePtr = buffArrayBgn + i * 4;
-			DWORD buffInstance = Mem::ReadDWORD(hProcess, buffInstancePtr);
+			DWORD buffInstance    = Mem::ReadDWORD(hProcess, buffInstancePtr);
 
 			Mem::Read(hProcess, buffInstance, buff, sizeBuff);
 
@@ -214,9 +214,9 @@ void GameObject::LoadChampionFromMem(DWORD base, HANDLE hProcess, bool deepLoad)
 			float buffEndTime;
 
 			memcpy(&buffStartTime, &buff[Offsets::BuffEntryBuffStartTime], sizeof(float));
-			memcpy(&buffEndTime, &buff[Offsets::BuffEntryBuffEndTime], sizeof(float));
+			memcpy(&buffEndTime,   &buff[Offsets::BuffEntryBuffEndTime], sizeof(float));
 
-			buffVector.push_back(BuffInstance(buffnamebuffer, buffStartTime, buffEndTime));
+			buffVector.push_back(BuffInstance(*new std::string(buffnamebuffer), buffStartTime, buffEndTime));
 		}
 	}
 
@@ -242,7 +242,7 @@ bool GameObject::IsRanged() {
 
 list GameObject::ItemsToPyList() {
 	list l;
-	for (int i = 0; i < 6; ++i) {
+	for (int i = 0; i < 6; ++i){
 		if (!itemSlots[i].isEmpty)
 			l.append(boost::ref(itemSlots[i]));
 	}
@@ -272,10 +272,10 @@ void GameObject::LoadMissileFromMem(DWORD base, HANDLE hProcess, bool deepLoad) 
 	if (spellDataPtr == 0)
 		return;
 
-	memcpy(&srcIndex, buff + Offsets::MissileSrcIdx, sizeof(short));
-	memcpy(&destIndex, buff + Offsets::MissileDestIdx, sizeof(short));
-	memcpy(&startPos, buff + Offsets::MissileStartPos, sizeof(Vector3));
-	memcpy(&endPos, buff + Offsets::MissileEndPos, sizeof(Vector3));
+	memcpy(&srcIndex,  buff + Offsets::MissileSrcIdx,   sizeof(short));
+	memcpy(&destIndex, buff + Offsets::MissileDestIdx,  sizeof(short));
+	memcpy(&startPos,  buff + Offsets::MissileStartPos, sizeof(Vector3));
+	memcpy(&endPos,    buff + Offsets::MissileEndPos,   sizeof(Vector3));
 
 	Mem::Read(hProcess, spellDataPtr, buff, 0x500);
 

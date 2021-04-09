@@ -23,7 +23,7 @@ using namespace std::chrono;
 ///
 /// Due to how league's game objects are implemented and to achieve good performance reading game objects
 /// this class doesnt use inheritance instead it packs all the types together in this class
-class GameObject : MemoryLoadable, SpellInterface {
+class GameObject: MemoryLoadable, SpellInterface {
 
 public:
 	// Base
@@ -85,10 +85,10 @@ public:
 	DWORD                 networkId;
 	DWORD                 address;
 
-	UnitInfo* unitInfo = GameData::UnknownUnit;
+	UnitInfo*             unitInfo = GameData::UnknownUnit;
 
 protected:
-	static const SIZE_T   sizeBuff = 0x4000;
+	static const SIZE_T   sizeBuff     = 0x4000;
 	static const SIZE_T   sizeBuffDeep = 0x1000;
 
 	static BYTE           buff[sizeBuff];
@@ -98,7 +98,7 @@ protected:
 public:
 	void                  LoadChampionFromMem(DWORD base, HANDLE hProcess, bool deepLoad = true);
 	float                 GetBasicAttackDamage();
-	Spell* GetSummonerSpell(SummonerSpellType type);
+	Spell*                GetSummonerSpell(SummonerSpellType type);
 
 	bool                  IsRanged();
 	list                  ItemsToPyList();
@@ -142,5 +142,5 @@ public:
 	Vector3               startPos;
 	Vector3               endPos;
 
-	SpellInfo* spellInfo = GameData::UnknownSpell;
+	SpellInfo*            spellInfo = GameData::UnknownSpell;
 };
